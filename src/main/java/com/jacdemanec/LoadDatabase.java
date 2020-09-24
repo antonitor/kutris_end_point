@@ -18,5 +18,4 @@ public class LoadDatabase {
             //log.info("Preloading " + repository.save(new Player("Frodo Baggins", "thief@gmail.com", 0, 0 ,1)));
         };
     }
-
 }

@@ -14,6 +14,4 @@ public class KutrisbackendApplication {
         SpringApplication.run(KutrisbackendApplication.class, args);
     }
 
-
-
 }
