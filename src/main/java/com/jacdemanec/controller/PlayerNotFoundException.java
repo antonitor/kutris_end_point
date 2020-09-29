@@ -1,4 +1,4 @@
-package com.jacdemanec;
+package com.jacdemanec.controller;
 
 public class PlayerNotFoundException extends RuntimeException{
 

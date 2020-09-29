@@ -1,5 +1,6 @@
-package com.jacdemanec;
+package com.jacdemanec.configuration;
 
+import com.jacdemanec.repository.PlayerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;

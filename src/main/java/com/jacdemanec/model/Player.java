@@ -1,11 +1,11 @@
-package com.jacdemanec;
+package com.jacdemanec.model;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 
 @Entity
 public class Player {
@@ -19,17 +19,19 @@ public class Player {
 	private String emailString;
 
 	private int score;
+
+	private int classification;
 	
 	private int lines_score;
 	
 	private int level_score;
 
-	
-	public Player(String aliasString, String emailString, int score, int lines_score, int level_score) {
+	public Player(String aliasString, String emailString, int score, int classification, int lines_score, int level_score) {
 		super();
 		this.aliasString = aliasString;
 		this.emailString = emailString;
 		this.score = score;
+		this.classification = classification;
 		this.lines_score = lines_score;
 		this.level_score = level_score;
 	}
@@ -83,6 +85,14 @@ public class Player {
 
 	public void setLevel_score(int level_score) {
 		this.level_score = level_score;
+	}
+
+	public int getClassification() {
+		return classification;
+	}
+
+	public void setClassification(int classification) {
+		this.classification = classification;
 	}
 
 	@Override

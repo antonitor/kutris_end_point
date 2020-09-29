@@ -1,4 +1,4 @@
-package com.jacdemanec;
+package com.jacdemanec.configuration;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
