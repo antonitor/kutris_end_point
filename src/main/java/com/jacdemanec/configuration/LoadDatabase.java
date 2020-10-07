@@ -1,5 +1,6 @@
 package com.jacdemanec.configuration;
 
+import com.jacdemanec.model.AppPlayer;
 import com.jacdemanec.repository.PlayerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,7 @@ public class LoadDatabase {
     CommandLineRunner initDatabase(PlayerRepository repository) {
 
         return args -> {
-            //log.info("Preloading " + repository.save(new Player("Bilbo Baggins", "burglar@gmail.com", 0, 0 ,1)));
-            //log.info("Preloading " + repository.save(new Player("Frodo Baggins", "thief@gmail.com", 0, 0 ,1)));
+            //log.info("Preloading " + repository.save(new AppPlayer("PEPE", "", 0, 0, 0 ,1)));
         };
     }
 }

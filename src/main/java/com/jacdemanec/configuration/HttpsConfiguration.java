@@ -19,7 +19,7 @@ public class HttpsConfiguration {
                 SecurityConstraint securityConstraint = new SecurityConstraint();
                 securityConstraint.setUserConstraint("CONFIDENTIAL");
                 SecurityCollection collection = new SecurityCollection();
-                collection.addPattern("/*");
+                collection.addPattern("/login");
                 securityConstraint.addCollection(collection);
                 context.addConstraint(securityConstraint);
             }

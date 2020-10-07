@@ -35,3 +35,4 @@ build/
 /src/main/resources/ssl-server.cer
 /src/main/resources/ssl-seerver_publickey.pem
 /src/main/resources/client_secret.json
+/src/main/resources/secret.txt
