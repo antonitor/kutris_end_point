@@ -10,10 +10,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -110,7 +113,13 @@ public class PlayerController {
 
 
     @PutMapping("/players/alias/{id}")
-    ResponseEntity<?> aliasUpdate(@RequestBody AppPlayer newAppPlayer, @PathVariable Long id) {
+    ResponseEntity<?> aliasUpdate(HttpServletResponse response, @RequestBody AppPlayer newAppPlayer, @PathVariable Long id) throws IOException  {
+        for (AppPlayer p : repository.findAll()) {
+            if (newAppPlayer.getAliasString().equalsIgnoreCase(p.getAliasString())) {
+                response.sendError(HttpStatus.UNAUTHORIZED.value());
+                return null;
+            }
+        }
         AppPlayer updatedAppPlayer = repository.findById(id)
                 .map(appPlayer -> {
                     appPlayer.setAliasString(newAppPlayer.getAliasString());
