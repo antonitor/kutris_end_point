@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -49,7 +51,7 @@ public class PlayerController {
             if (p.getScore() >= appPlayer.getScore() && !p.getId().equals(appPlayer.getId())) position.getAndIncrement();
         }
         appPlayer.setClassification(position.get());
-        logger.info("POST /login " + userId);
+        logger.info("POST /login " + appPlayer.toString());
         return assembler.toModel(appPlayer);
     }
 
@@ -62,7 +64,7 @@ public class PlayerController {
             if (p.getScore() >= appPlayer.getScore() && !p.getId().equals(appPlayer.getId())) position.getAndIncrement();
         }
         appPlayer.setClassification(position.get());
-        logger.info("GET /players/" + id + " : " + appPlayer.toString());
+        //logger.info("GET /players/" + id + " : " + appPlayer.toString());
         return assembler.toModel(appPlayer);
     }
 
@@ -71,7 +73,7 @@ public class PlayerController {
         List<EntityModel<AppPlayer>> players = repository.findAll(Sort.by(Sort.Direction.DESC, "score")).stream()
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
-        logger.info("GET /leaderboard : " + players.toString());
+        //logger.info("GET /leaderboard : " + players.toString());
         return CollectionModel.of(players,
                 linkTo(methodOn(PlayerController.class).leaderboard()).withSelfRel());
     }
@@ -81,7 +83,7 @@ public class PlayerController {
         List<EntityModel<AppPlayer>> players = repository.findAll(Sort.by(Sort.Direction.DESC, "score")).stream().limit(maxSize)
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
-        logger.info("GET /leaderboard/(MAXSIZE)" + maxSize + " : " + players.toString());
+        //logger.info("GET /leaderboard/(MAXSIZE)" + maxSize + " : " + players.toString());
         return CollectionModel.of(players,
                 linkTo(methodOn(PlayerController.class).leaderboard()).withSelfRel());
     }
@@ -92,7 +94,7 @@ public class PlayerController {
         List<EntityModel<AppPlayer>> players = repository.findAll().stream()
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
-        logger.info("GET /players : " + players.toString());
+        //logger.info("GET /players : " + players.toString());
         return CollectionModel.of(players,
                 linkTo(methodOn(PlayerController.class).all()).withSelfRel());
     }
@@ -102,7 +104,7 @@ public class PlayerController {
     @PostMapping("/players")
     ResponseEntity<?> newPlayer(@RequestBody AppPlayer newAppPlayer) {
         EntityModel<AppPlayer> entityModel = assembler.toModel(repository.save(newAppPlayer));
-        logger.info("POST /players : " + entityModel.toString());
+        //logger.info("POST /players : " + entityModel.toString());
         return ResponseEntity
                 .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
                 .body(entityModel);
@@ -114,19 +116,31 @@ public class PlayerController {
 
     @PutMapping("/players/alias/{id}")
     ResponseEntity<?> aliasUpdate(HttpServletResponse response, @RequestBody AppPlayer newAppPlayer, @PathVariable Long id) throws IOException  {
+        AppPlayer thePlayer = repository.findById(id).orElseThrow(() -> new PlayerNotFoundException(id));
         for (AppPlayer p : repository.findAll()) {
             if (newAppPlayer.getAliasString().equalsIgnoreCase(p.getAliasString())) {
-                response.sendError(HttpStatus.UNAUTHORIZED.value());
+                response.sendError(HttpStatus.CONFLICT.value());
+                logger.info("PLAYER " + thePlayer.getAliasString() + " TRIED TO RENAME TO " + newAppPlayer.getAliasString() + " BUT THIS ALIAS IS ALREADY IN USE BY ANOTHER PLAYER");
+                return null;
+            }
+        }
+        if (newAppPlayer.getLastAliasUpdate() != null) {
+            long daysBetween = ChronoUnit.DAYS.between(thePlayer.getLastAliasUpdate(), LocalDateTime.now());
+            //logger.info("DAYS BETWEEN " + daysBetween);
+            if (daysBetween <= 1) {
+                response.sendError(HttpStatus.TOO_EARLY.value());
+                logger.info("PLAYER " + thePlayer.getAliasString() + " TRIED TO RENAME TO " + newAppPlayer.getAliasString() + " BUT IT'S TOO EARLY");
                 return null;
             }
         }
         AppPlayer updatedAppPlayer = repository.findById(id)
                 .map(appPlayer -> {
+                    appPlayer.setLastAliasUpdate(LocalDateTime.now());
                     appPlayer.setAliasString(newAppPlayer.getAliasString());
                     return repository.save(appPlayer);
                 })
                 .orElseThrow(() -> new PlayerNotFoundException(id));
-        logger.info("PUT /players/alias : " + newAppPlayer.getAliasString());
+        logger.info("PLAYER " + thePlayer.getAliasString() + " RENAMED TO " + newAppPlayer.getAliasString() + " SUCCESSFULLY");
         EntityModel<AppPlayer> entityModel = assembler.toModel(updatedAppPlayer);
         return ResponseEntity
                 .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
@@ -145,7 +159,7 @@ public class PlayerController {
                 })
                 .orElseThrow(() -> new PlayerNotFoundException(id));
 
-        logger.info("UPDATE SCORE " + newAppPlayer.getScore() + " FOR PLAYER " + newAppPlayer.getAliasString());
+        //logger.info("UPDATE SCORE " + newAppPlayer.getScore() + " FOR PLAYER " + newAppPlayer.getAliasString());
 
         EntityModel<AppPlayer> entityModel = assembler.toModel(updatedAppPlayer);
         return ResponseEntity

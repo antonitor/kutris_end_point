@@ -2,6 +2,7 @@ package com.jacdemanec.auth;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -27,12 +28,12 @@ public class LoginFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginFilter.class);
     private static final JsonFactory jsonFactory = new JacksonFactory();
-    private final GoogleAuthCodeExange googleAuthCodeExange;
+    private final GoogleAuthCodeExchange googleAuthCodeExchange;
     private final PlayerRepository repository;
 
     @Autowired
-    public LoginFilter(GoogleAuthCodeExange googleAuthCodeExange, PlayerRepository playerRepository) {
-        this.googleAuthCodeExange = googleAuthCodeExange;
+    public LoginFilter(GoogleAuthCodeExchange googleAuthCodeExchange, PlayerRepository playerRepository) {
+        this.googleAuthCodeExchange = googleAuthCodeExchange;
         this.repository = playerRepository;
     }
 
@@ -41,42 +42,39 @@ public class LoginFilter implements Filter {
                          FilterChain filterChain) throws IOException, ServletException {
 
         HttpServletRequest request = (HttpServletRequest) servletRequest;
-        logHeaders(request);
+        //logHeaders(request);
 
         //String authCode = ((HttpServletRequest) servletRequest).getHeader("Authorization");
         String authCode = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        logger.info("LOGIN FILTER -> AUTH CODE : " + authCode);
+        //logger.info("LOGIN FILTER -> AUTH CODE : " + authCode);
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         if (!authCode.isEmpty()) {
 
             final String userID;
-            try {
-                userID = googleAuthCodeExange.exchange(authCode);
-                if (userID != null ){
-                    if (repository.findByGpgsId(userID)!=null) {
-                        AppPlayer appPlayer = repository.findByGpgsId(userID);
-                        logger.info("FOUND USER IN DB WITH GPGS ID " + userID + " and alias " + appPlayer.getAliasString());
-                        AppTokenProvider.addAuthentication(response, jsonFactory.toString(appPlayer));
-                        request.setAttribute("userID", userID);
-                    } else {
-                        String anonymous = "anonymous" + new Random().nextInt(9999);
-                        AppPlayer appPlayer = new AppPlayer(anonymous, userID,0,0,0,1);
-                        logger.info("GENERATED A NEW USER IN DB WITH GPGS ID " + userID + " and alias " + anonymous);
-                        repository.save(appPlayer);
-                        AppTokenProvider.addAuthentication(response, userID);
-                        request.setAttribute("userID", userID);
-                        logger.info("RESPONSE HEADER Authorization:" + response.getHeader("Authorization"));
-                    }
-                    filterChain.doFilter(servletRequest, response);
-                    return;
+
+            userID = googleAuthCodeExchange.exchange(authCode);
+            if (userID != null) {
+                if (repository.findByGpgsId(userID) != null) {
+                    AppPlayer appPlayer = repository.findByGpgsId(userID);
+                    //logger.info("FOUND USER IN DB WITH GPGS ID " + userID + " and alias " + appPlayer.getAliasString());
+                    AppTokenProvider.addAuthentication(response, jsonFactory.toString(appPlayer));
+                    request.setAttribute("userID", userID);
+                } else {
+                    String anonymous = "Player-" + new Random().nextInt(9999);
+                    LocalDateTime dateTime = LocalDateTime.parse("2020-01-01T08:22:12");
+                    AppPlayer appPlayer = new AppPlayer(anonymous, userID, 0, 0, 0, 1, dateTime);
+                    //logger.info("GENERATED A NEW USER IN DB WITH GPGS ID " + userID + " and alias " + anonymous);
+                    repository.save(appPlayer);
+                    AppTokenProvider.addAuthentication(response, userID);
+                    request.setAttribute("userID", userID);
+                    //logger.info("RESPONSE HEADER Authorization:" + response.getHeader("Authorization"));
                 }
-            } catch (GeneralSecurityException | InvalidAuthCodeException e) {
-                // Not valid authCode, we will send HTTP 401 back
-                logger.info("LOGIN FILTER -> " + e.getMessage());
+                filterChain.doFilter(servletRequest, response);
+                return;
             }
         }
-        logger.info("LOGIN FILTER ->  AuthCode NOT FOUND");
+        //logger.info("LOGIN FILTER ->  AuthCode NOT FOUND");
         ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 

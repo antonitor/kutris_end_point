@@ -2,12 +2,10 @@ package com.jacdemanec.model;
 
 import com.jacdemanec.controller.PlayerNotFoundException;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class AppPlayer {
@@ -29,13 +27,17 @@ public class AppPlayer {
 	
 	private int level_score;
 
-	public AppPlayer(String aliasString, String gpgsId, int score, int classification, int lines_score, int level_score) {
+	@Basic
+	private LocalDateTime lastAliasUpdate;
+
+	public AppPlayer(String aliasString, String gpgsId, int score, int classification, int lines_score, int level_score, LocalDateTime lastAliasUpdate) {
 		this.aliasString = aliasString;
 		this.gpgsId = gpgsId;
 		this.score = score;
 		this.classification = classification;
 		this.lines_score = lines_score;
 		this.level_score = level_score;
+		this.lastAliasUpdate = lastAliasUpdate;
 	}
 
 	public AppPlayer() {
@@ -97,28 +99,44 @@ public class AppPlayer {
 		this.classification = classification;
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.id, this.aliasString, this.gpgsId, this.score, this.lines_score, this.level_score);
+	public LocalDateTime getLastAliasUpdate() {
+		return lastAliasUpdate;
+	}
+
+	public void setLastAliasUpdate(LocalDateTime lastAliasUpdate) {
+		this.lastAliasUpdate = lastAliasUpdate;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!(obj instanceof AppPlayer)) return false;
-		AppPlayer appPlayer = (AppPlayer) obj;
-		return Objects.equals(this.id, appPlayer.id)
-				&& Objects.equals(this.aliasString, appPlayer.aliasString)
-				&& Objects.equals(this.gpgsId, appPlayer.gpgsId)
-				&& Objects.equals(this.score, appPlayer.score)
-				&& Objects.equals(this.lines_score, appPlayer.lines_score)
-				&& Objects.equals(this.level_score, appPlayer.level_score);
- 	}
+	public int hashCode() {
+		return Objects.hash(id, aliasString, gpgsId, score, classification, lines_score, level_score, lastAliasUpdate);
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		AppPlayer appPlayer = (AppPlayer) o;
+		return score == appPlayer.score &&
+				classification == appPlayer.classification &&
+				lines_score == appPlayer.lines_score &&
+				level_score == appPlayer.level_score &&
+				Objects.equals(id, appPlayer.id) &&
+				Objects.equals(aliasString, appPlayer.aliasString) &&
+				Objects.equals(gpgsId, appPlayer.gpgsId) &&
+				Objects.equals(lastAliasUpdate, appPlayer.lastAliasUpdate);
+	}
 
 	@Override
 	public String toString() {
-		return "Player [id=" + id + ", alias=" + aliasString + ", gpgsId=" + gpgsId + ", score=" + score +
-				", lines=" + lines_score + ", level=" + level_score + "]";
+		return "{" +
+				"id=" + id +
+				", aliasString='" + aliasString + '\'' +
+				", gpgsId='" + gpgsId + '\'' +
+				", score=" + score +
+				", lines_score=" + lines_score +
+				", level_score=" + level_score +
+				'}';
 	}
-
 }
